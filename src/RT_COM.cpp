@@ -38,7 +38,7 @@ RT_COM::~RT_COM()
 }
 
 void RT_COM::ResetCounters()
-{ 
+{
 	//m_u64Total_Rx_Bytes = 0;
 	//m_u64Total_Tx_Bytes = 0;
 	m_u64Total_Rx_Packages = 0;
@@ -67,6 +67,7 @@ void RT_COM::Close()
     m_RecvThreadStopFlag = TRUE;
 	m_RecvThread.join();
     m_Serial->close();
+    delete m_Serial;
     m_Serial = nullptr;
 	m_IsOpened = FALSE;
 }
@@ -145,15 +146,15 @@ BOOL RT_COM::AnalyzePackage(BYTE data)
 		CheckSum -= m_FrameTail;
 		CheckSum -= m_pRxBuf[m_RxPackageDataCount];
 		USART_LastByte = data;
-		USART_BeginFlag = FALSE; 
+		USART_BeginFlag = FALSE;
 		if(CheckSum == m_pRxBuf[m_RxPackageDataCount])
-		{                          		   		
+		{
 			CheckSum = 0;
 			return TRUE;
 		}
         m_u64Total_Rx_LostPackages ++;
 
-		CheckSum = 0;                    
+		CheckSum = 0;
 		return FALSE;
 	}
 	USART_LastByte = data ;
@@ -222,22 +223,22 @@ DWORD RT_COM::WritePackage(BYTE * buf, DWORD len, DWORD dwTimeout)
 	len =  pBuf - m_pTxBuf;
 
 	DWORD nw = WriteBuf(m_pTxBuf, len, dwTimeout);
-	
-	if(nw) m_u64Total_Tx_Packages ++;	
-	
+
+	if(nw) m_u64Total_Tx_Packages ++;
+
 	return nw;
 }
 
 DWORD RT_COM::WriteBuf(const BYTE *byBuf, DWORD dwLen, DWORD dwTimeout)
 {
 	DWORD nw = 0;
-	
+
 	if(byBuf == nullptr)
 		return 0;
 
 	if(!IsOpened())
 		return 0;
-	
+
 	nw = m_Serial->write(byBuf, dwLen);
 
 	//m_u64Total_Tx_Bytes += nw;
